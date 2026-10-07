@@ -7,6 +7,8 @@ import { encrypt } from "@/lib/crypto";
 import { isAllowed, normalizeEmail, parseAllowlist } from "@/lib/allowlist";
 
 export const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.readonly";
+// Send is only used for follow-ups the user reviews and sends themselves
+export const GMAIL_SEND_SCOPE = "https://www.googleapis.com/auth/gmail.send";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
@@ -15,7 +17,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Google({
       authorization: {
         params: {
-          scope: `openid email profile ${GMAIL_SCOPE}`,
+          scope: `openid email profile ${GMAIL_SCOPE} ${GMAIL_SEND_SCOPE}`,
           access_type: "offline",
           prompt: "consent",
         },
@@ -43,6 +45,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name: profile.name ?? null,
             image: (profile.picture as string | undefined) ?? null,
             googleRefreshTokenEnc: refresh ?? null,
+            googleScopes: account.scope ?? null,
           })
           .onConflictDoUpdate({
             target: schema.users.email,
@@ -50,6 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               name: profile.name ?? null,
               image: (profile.picture as string | undefined) ?? null,
               ...(refresh ? { googleRefreshTokenEnc: refresh, gmailNeedsReconnect: false } : {}),
+              ...(account.scope ? { googleScopes: account.scope } : {}),
             },
           })
           .returning({ id: schema.users.id });

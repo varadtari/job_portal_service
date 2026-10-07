@@ -15,6 +15,90 @@
       "when": 1791008996991,
       "tag": "0001_enable_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791014132284,
+      "tag": "0002_jobs_sources",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791041375904,
+      "tag": "0003_job_prefs",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791041935083,
+      "tag": "0004_experience_level",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791043185945,
+      "tag": "0005_jsearch_via",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791043749396,
+      "tag": "0006_tailoring",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791047631973,
+      "tag": "0007_unique_application",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791048391192,
+      "tag": "0008_gmail_synced",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791050330310,
+      "tag": "0009_alerts_synced",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791097947236,
+      "tag": "0010_push",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791306398947,
+      "tag": "0011_job_country",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791306862483,
+      "tag": "0012_apply_queue",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791307663755,
+      "tag": "0013_follow_ups",
+      "breakpoints": true
     }
   ]
 }

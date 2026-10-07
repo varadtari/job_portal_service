@@ -4,7 +4,7 @@ A personal job search copilot. It lists jobs, autofills applications from a prof
 
 ```
 apps/web         Next.js 16 app (UI, API routes, cron) deployed to Vercel
-apps/extension   Chrome extension for autofill (phase 5)
+apps/extension   Chrome extension (MV3) for autofill: build with `npm run build:ext`, load `apps/extension/dist`
 packages/shared  Shared types and schemas
 ```
 
@@ -13,11 +13,12 @@ packages/shared  Shared types and schemas
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Monorepo, Google login + allowlist, DB schema, app shell, cron stubs | ✅ Done |
-| 2 | Profile editor, resume upload and parsing | ⏳ |
-| 3 | Job sources (JSearch, Adzuna, Greenhouse, Lever, Ashby, URL), jobs UI | ⏳ |
-| 4 | Resume tailoring and PDF/DOCX export | ⏳ |
-| 5 | Chrome extension: autofill, learning, application capture | ⏳ |
-| 6 | Gmail sync, status classification, Kanban dashboard | ⏳ |
+| 2 | Profile editor, resume upload and parsing | ✅ Done (rule-based parser; Claude used if `ANTHROPIC_API_KEY` is set) |
+| 3 | Job sources (Greenhouse, Lever, Ashby free; JSearch/Adzuna optional; URL import), jobs UI, skill match | ✅ Done |
+| 4 | Resume tailoring (rules + optional Gemini free tier), review, PDF/DOCX export | ✅ Done |
+| 5 | Chrome extension: autofill (incl. custom dropdowns), resume attach, learning, application capture | ✅ Done |
+| 6 | Gmail sync (rule-based classifier + matcher), needs-review inbox, Kanban, timeline, dashboard funnel | ✅ Done |
+| 7 | Worldwide jobs + location filter, one-click & bulk tailoring, apply queue (extension), follow-up emails (drafted, user sends) | ✅ Done |
 
 ## One-time setup
 
@@ -59,7 +60,32 @@ npm run dev
 1. Import the repo at https://vercel.com/new and set **Root Directory** to `apps/web`.
 2. Add every variable from `.env.example` under **Settings → Environment Variables**.
 3. Deploy. The cron jobs in `apps/web/vercel.json` register automatically.
-   - On the Hobby plan, crons are limited to once per day. Use Pro to get the 30-minute Gmail sync, or trigger it from an external scheduler with the `CRON_SECRET` bearer token.
+   - The Hobby plan allows only daily crons, so `vercel.json` runs both syncs once a day. For more frequent Gmail sync, call `/api/cron/gmail-sync` from an external scheduler (e.g. GitHub Actions) with `Authorization: Bearer $CRON_SECRET`.
+
+Production URL: https://jobpilot-rho-green.vercel.app
+
+## Chrome extension
+1. `npm run build:ext` (outputs `apps/extension/dist`).
+2. In Chrome open `chrome://extensions`, enable **Developer mode**, then **Load unpacked** and select `apps/extension/dist`.
+3. In JobPilot → **Settings**, create a token and paste it into the extension popup.
+4. On an application form: click the icon → **Autofill this page** (or Alt+Shift+F). Submitting, or **Save answers & mark applied**, saves new answers and logs the application.
+
+The extension runs only when clicked (`activeTab`), plus ATS domains for embedded iframes. The token lives in extension storage; API calls go through the background worker, never the page. Custom dropdowns (react-select) are filled by a small page-world helper (`src/main.ts`) that calls the component's own select function.
+
+## Android
+**Phone app (PWA).** Open the site in Chrome on Android → ⋮ → *Install app* (or Settings → Phone app → Install). It runs full-screen with a bottom tab bar and:
+- **Share → JobPilot** from LinkedIn, Naukri, Indeed or Chrome adds the job (`/share`, manifest `share_target`).
+- **Quick answers** (`/answers`): tap any profile value or saved answer to copy it into a form.
+- **Push notifications** (Settings → Notifications) when Gmail sync finds an assessment, interview, offer or rejection. Needs `NEXT_PUBLIC_VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` (`npx web-push generate-vapid-keys`).
+- Offline fallback page via `public/sw.js`.
+
+**Firefox for Android extension.** `npm run build:firefox -w apps/extension` → `apps/extension/dist-firefox` (event-page background, gecko id, min Firefox 142). `npm run package:firefox -w apps/extension` zips it. Firefox requires signed add-ons. Bump `version` in `static/manifest.json`, then run `AMO_KEY=… AMO_SECRET=… npm run sign:firefox -w apps/extension` (keys from addons.mozilla.org → Developer Hub → API keys). It signs the add-on as *unlisted* (private) and saves `signed/*.xpi`; copy it to `apps/web/public/downloads/jobpilot-autofill.xpi` and deploy. Phones install it from Settings → "Download the Firefox add-on". (`web-ext sign` is rejected with "Unknown JWT iss" for this account; the script calls the AMO API directly.) The `/api/ext/*` routes allow CORS from extension origins (token auth, no cookies).
+
+## Apply queue & follow-ups
+- **Location filter**: `jobs.country_code` (from `lib/jobs/regions.ts`) powers region chips with counts plus free-text city/country. Searches with no location are worldwide; the company directory has ~150 global boards; JSearch rotates one country per day for worldwide searches.
+- **One-click tailoring** (`lib/tailor/auto.ts`): Gemini (guarded, 35s timeout, LOW thinking) or rules; reuses an existing tailored resume unless re-tailored. Bulk selection on Jobs runs it per job (spaced for Gemini's free tier) and can queue each job.
+- **Apply queue** (`/queue`, `apply_queue` table, `/api/ext/queue`): the extension opens each queued job, autofills it, attaches that job's tailored resume and shows a bottom bar; submitting (or "Submitted → next") logs the application and opens the next job. Nothing is auto-submitted.
+- **Follow-ups** (`lib/followup/*`): due when the timer (latest of applied / last follow-up / company's last email) passes N days, while waiting (applied, assessment, no response), up to a max, never >30 days after the last activity. The daily Gmail cron drafts them (Gemini or template) and sends a push; the user reviews and sends from Gmail (`gmail.send` scope, threaded replies via `lib/gmail/send.ts`).
 
 ## Access control
 - Only emails listed in `ALLOWED_EMAILS` (env) or the `allowed_emails` table can sign in. Everyone else gets "This Google account isn't on the allowlist".
@@ -69,7 +95,8 @@ npm run dev
 ## Development
 ```bash
 cd apps/web
-npm test            # vitest
+npm test            # vitest unit tests
+SAMPLE_DIR=/path/to/samples npm run test:int   # real Supabase Storage + PDF/DOCX extraction
 npm run typecheck   # next typegen + tsc
 npm run lint
 npm run db:generate # after editing lib/db/schema.ts

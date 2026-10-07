@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "experience_level" text DEFAULT 'any' NOT NULL;

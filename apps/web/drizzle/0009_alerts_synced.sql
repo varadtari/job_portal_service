@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "alerts_synced_at" timestamp with time zone;

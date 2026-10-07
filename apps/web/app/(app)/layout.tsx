@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth, getUser, signOut } from "@/auth";
-import { Nav } from "@/components/nav";
+import { BottomNav, Nav } from "@/components/nav";
+import { ServiceWorkerRegister } from "@/components/pwa";
+
+async function signOutAction() {
+  "use server";
+  await signOut({ redirectTo: "/login" });
+}
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -9,35 +15,46 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const user = await getUser(session.user.id);
   if (!user) redirect("/login");
 
+  const logo = (
+    <Link href="/dashboard" className="flex items-center gap-2 px-2">
+      <div className="grid size-7 place-items-center rounded-md bg-accent text-sm font-bold text-accent-fg">J</div>
+      <span className="font-semibold">JobPilot</span>
+    </Link>
+  );
+
   return (
     <div className="mx-auto flex min-h-screen max-w-7xl flex-col md:flex-row">
-      <aside className="border-b border-border p-4 md:w-56 md:shrink-0 md:border-r md:border-b-0">
-        <Link href="/dashboard" className="mb-4 flex items-center gap-2 px-2">
-          <div className="grid size-7 place-items-center rounded-md bg-accent text-sm font-bold text-accent-fg">J</div>
-          <span className="font-semibold">JobPilot</span>
-        </Link>
+      <ServiceWorkerRegister />
+      {/* Desktop sidebar */}
+      <aside className="hidden border-r border-border p-4 md:block md:w-56 md:shrink-0">
+        <div className="mb-4">{logo}</div>
         <Nav />
-        <div className="mt-6 hidden border-t border-border px-2 pt-4 text-xs text-fg-muted md:block">
+        <div className="mt-6 border-t border-border px-2 pt-4 text-xs text-fg-muted">
           <p className="truncate">{user.email}</p>
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/login" });
-            }}
-          >
+          <form action={signOutAction}>
             <button className="mt-2 hover:text-fg">Sign out</button>
           </form>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 p-4 md:p-8">
+      {/* Phone top bar */}
+      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-bg/95 px-2 pb-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] backdrop-blur md:hidden">
+        {logo}
+        <div className="flex items-center gap-1 text-sm">
+          <Link href="/resumes" className="rounded-lg px-2.5 py-1.5 text-fg-muted hover:bg-muted">Resumes</Link>
+          <Link href="/profile" className="rounded-lg px-2.5 py-1.5 text-fg-muted hover:bg-muted">Profile</Link>
+          <Link href="/settings" className="rounded-lg px-3 py-1.5 text-fg-muted hover:bg-muted" aria-label="Settings">⚙</Link>
+        </div>
+      </header>
+      <main className="min-w-0 flex-1 p-4 pb-28 md:p-8">
         {user.gmailNeedsReconnect && (
-          <div className="mb-6 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
+          <form action={signOutAction} className="mb-6 rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 text-sm">
             Gmail access expired, so status tracking is paused.{" "}
-            <Link href="/login" className="font-medium underline">Reconnect Gmail</Link>
-          </div>
+            <button className="font-medium underline">Sign in again to reconnect</button>
+          </form>
         )}
         {children}
       </main>
+      <BottomNav />
     </div>
   );
 }

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "applications_user_job" ON "applications" USING btree ("user_id","job_id") WHERE "applications"."job_id" is not null;

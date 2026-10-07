@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      :root { --bg:#fff; --fg:#18181b; --muted:#71717a; --border:#e4e4e7; --accent:#4f46e5; --ok:#16a34a; --warn:#d97706; --err:#dc2626; --soft:#f4f4f5; }
+      @media (prefers-color-scheme: dark) { :root { --bg:#151518; --fg:#f4f4f5; --muted:#a1a1aa; --border:#2a2a30; --accent:#818cf8; --soft:#1e1e22; } }
+      * { box-sizing: border-box; }
+      body { margin: 0; width: 330px; font: 13px/1.45 system-ui, sans-serif; background: var(--bg); color: var(--fg); }
+      header { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+      .logo { width: 22px; height: 22px; border-radius: 6px; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 12px; }
+      main { padding: 14px; display: grid; gap: 10px; }
+      button { width: 100%; border: 0; border-radius: 8px; padding: 9px 12px; font: inherit; font-weight: 600; cursor: pointer; background: var(--accent); color: #fff; }
+      button.secondary { background: var(--soft); color: var(--fg); border: 1px solid var(--border); }
+      button:disabled { opacity: .6; cursor: default; }
+      input { width: 100%; padding: 7px 9px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--fg); font: inherit; }
+      label { font-size: 11px; color: var(--muted); display: block; margin-bottom: 3px; }
+      .muted { color: var(--muted); font-size: 12px; }
+      .card { border: 1px solid var(--border); border-radius: 10px; padding: 10px; display: grid; gap: 4px; }
+      .ok { color: var(--ok); } .warn { color: var(--warn); } .err { color: var(--err); }
+      .legend span { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin: 0 4px -1px 8px; }
+      a { color: var(--accent); }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <header><div class="logo">J</div><b>JobPilot</b><span id="who" class="muted" style="margin-left:auto"></span></header>
+    <main>
+      <section id="setup" hidden>
+        <p class="muted" style="margin-top:0">Create a token in <a id="settingsLink" target="_blank">JobPilot → Settings</a> and paste it here.</p>
+        <label for="token">Extension token</label>
+        <input id="token" placeholder="jp_…" autocomplete="off" />
+        <details style="margin-top:8px"><summary class="muted">Server</summary><input id="server" style="margin-top:6px" /></details>
+        <button id="saveSettings" style="margin-top:10px">Connect</button>
+        <p id="setupMsg" class="err"></p>
+      </section>
+      <section id="ready" hidden>
+        <div id="tabJob" class="card" hidden>
+          <span class="muted">This tab</span>
+          <b id="tabJobTitle"></b>
+          <span id="tabJobResume"></span>
+          <button id="tabJobPdf" class="secondary" hidden>Download tailored PDF</button>
+        </div>
+        <div id="queueBox" class="card">
+          <b>Apply queue</b>
+          <span id="queueInfo" class="muted">Checking…</span>
+          <button id="queueStart" hidden>Start apply queue</button>
+          <button id="queueStop" class="secondary" hidden>Stop queue</button>
+        </div>
+        <button id="autofill">Autofill this page</button>
+        <button id="saveAnswers" class="secondary">Save answers &amp; mark applied</button>
+        <div id="result" class="card" hidden></div>
+        <p class="muted legend" style="margin:0">Outline:<span style="background:#16a34a"></span>filled<span style="background:#2563eb"></span>saved answer<span style="background:#d97706"></span>needs you</p>
+        <p class="muted" style="margin:0">Shortcut: Alt+Shift+F · <a href="#" id="disconnect">Disconnect</a></p>
+      </section>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

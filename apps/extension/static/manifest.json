@@ -1,0 +1,53 @@
+{
+  "manifest_version": 3,
+  "name": "JobPilot Autofill",
+  "version": "0.4.0",
+  "description": "Autofill job applications from your JobPilot profile, attach your resume, and log applications.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "JobPilot",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://jobpilot-rho-green.vercel.app/*",
+    "http://localhost/*",
+    "https://*.greenhouse.io/*",
+    "https://*.lever.co/*",
+    "https://*.ashbyhq.com/*",
+    "https://*.myworkdayjobs.com/*",
+    "https://*.workable.com/*",
+    "https://*.smartrecruiters.com/*",
+    "https://*.icims.com/*",
+    "https://*.bamboohr.com/*",
+    "https://*.recruitee.com/*",
+    "https://*.teamtailor.com/*"
+  ],
+  "commands": {
+    "autofill": {
+      "suggested_key": {
+        "default": "Alt+Shift+F"
+      },
+      "description": "Autofill this page"
+    }
+  },
+  "optional_host_permissions": [
+    "<all_urls>"
+  ]
+}

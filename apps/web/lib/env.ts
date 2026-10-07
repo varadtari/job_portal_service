@@ -11,6 +11,11 @@ const schema = z.object({
   TOKEN_ENC_KEY: z.string().min(40),
   CRON_SECRET: z.string().min(16),
   ANTHROPIC_API_KEY: z.string().optional(),
+  // Google AI Studio key (free tier) used for resume tailoring
+  GEMINI_API_KEY: z.string().optional(),
+  // Web push (npx web-push generate-vapid-keys)
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
   RAPIDAPI_KEY: z.string().optional(),
   ADZUNA_APP_ID: z.string().optional(),
   ADZUNA_APP_KEY: z.string().optional(),

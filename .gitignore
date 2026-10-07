@@ -5,3 +5,6 @@ dist
 .env*.local
 .vercel
 *.tsbuildinfo
+dist-firefox
+*.zip
+apps/extension/signed

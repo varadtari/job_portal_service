@@ -1,0 +1,19 @@
+{
+  "name": "@jobpilot/extension",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "watch": "node build.mjs --watch",
+    "typecheck": "tsc --noEmit",
+    "build:firefox": "node build.mjs --target=firefox",
+    "package:firefox": "node build.mjs --target=firefox && cd dist-firefox && zip -qr ../jobpilot-firefox.zip .",
+    "sign:firefox": "node scripts/amo-sign.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.3.4",
+    "esbuild": "^0.28.2",
+    "typescript": "^5.9.3"
+  }
+}
