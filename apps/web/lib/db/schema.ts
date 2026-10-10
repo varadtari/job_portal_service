@@ -44,6 +44,8 @@ export const users = pgTable("users", {
   followUpDefaultOn: boolean("follow_up_default_on").notNull().default(true),
   followUpDefaultDays: integer("follow_up_default_days").notNull().default(7),
   followUpDefaultMax: integer("follow_up_default_max").notNull().default(2),
+  // Outreach: max cold emails per rolling 24h (protects the Gmail account's reputation)
+  outreachDailyCap: integer("outreach_daily_cap").notNull().default(25),
   // sha256 of the personal token used by the Chrome extension
   extTokenHash: text("ext_token_hash"),
   jobsSyncedAt: timestamp("jobs_synced_at", { withTimezone: true }),
@@ -303,4 +305,71 @@ export const followUps = pgTable(
     sentAt: timestamp("sent_at", { withTimezone: true }),
   },
   (t) => [index("follow_ups_app").on(t.applicationId), index("follow_ups_user_status").on(t.userId, t.status)],
+);
+
+// ---------- Outreach: hiring contacts + cold emails with the master resume ----------
+
+export const outreachSource = pgEnum("outreach_source", ["job_post", "gmail", "manual", "website"]);
+export const outreachContactStatus = pgEnum("outreach_contact_status", ["new", "emailed", "replied", "bounced", "do_not_contact"]);
+export const outreachEmailStatus = pgEnum("outreach_email_status", ["draft", "sending", "sent", "failed", "dismissed"]);
+
+export const outreachContacts = pgTable(
+  "outreach_contacts",
+  {
+    id: id(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    email: text("email").notNull(), // always lower-case
+    name: text("name"),
+    company: text("company"),
+    domain: text("domain").notNull(),
+    location: text("location"),
+    countryCode: text("country_code"),
+    remote: boolean("remote").notNull().default(false),
+    source: outreachSource("source").notNull(),
+    sourceRef: text("source_ref"), // job id, Gmail message id or page URL
+    kind: text("kind").notNull().default("person"), // role (careers@, hr@…) | person
+    status: outreachContactStatus("status").notNull().default("new"),
+    lastEmailedAt: timestamp("last_emailed_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("outreach_contacts_user_email").on(t.userId, t.email), index("outreach_contacts_user_status").on(t.userId, t.status)],
+);
+
+export const outreachEmails = pgTable(
+  "outreach_emails",
+  {
+    id: id(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    contactId: uuid("contact_id").notNull().references(() => outreachContacts.id, { onDelete: "cascade" }),
+    status: outreachEmailStatus("status").notNull().default("draft"),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    method: text("method").notNull(), // gemini | template
+    resumeId: uuid("resume_id").references(() => resumes.id, { onDelete: "set null" }),
+    gmailMessageId: text("gmail_message_id"),
+    threadId: text("thread_id"),
+    error: text("error"),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [index("outreach_emails_user_status").on(t.userId, t.status), index("outreach_emails_contact").on(t.contactId)],
+);
+
+// Company websites checked for openings (ATS boards, JSON-LD jobs) and published hiring addresses
+export const companySites = pgTable(
+  "company_sites",
+  {
+    id: id(),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    domain: text("domain").notNull(),
+    name: text("name"),
+    lastCheckedAt: timestamp("last_checked_at", { withTimezone: true }),
+    ats: text("ats"),
+    slug: text("slug"),
+    jobsFound: integer("jobs_found").notNull().default(0),
+    emailsFound: integer("emails_found").notNull().default(0),
+    error: text("error"),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("company_sites_user_domain").on(t.userId, t.domain)],
 );

@@ -206,6 +206,8 @@ export async function syncUserJobs(userId: string): Promise<{ report: SyncReport
       report.push({ source: "email", label, fetched: 0, kept: 0, error: errMsg(err) });
     }
   }
+  // Hiring addresses published in job descriptions → Outreach contacts
+  await import("@/lib/outreach/harvest").then((m) => m.harvestFromJobs(userId)).catch(() => 0);
   const ranJSearch = report.some((r) => r.source === "jsearch" && !r.error);
   await db()
     .update(schema.users)

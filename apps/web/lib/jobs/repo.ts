@@ -1,4 +1,5 @@
 import { and, count, desc, eq, gte, ilike, inArray, isNotNull, ne, or, type SQL } from "drizzle-orm";
+import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { db, schema } from "@/lib/db";
 import { matchRank, matchSkills, type MatchResult } from "@/lib/match/skills";
 import { locationTerms } from "./filter";
@@ -37,17 +38,20 @@ export type JobListItem = {
 };
 
 /** SQL condition for a region key or a free-text place (city aliases and detected country included). */
-export function locationWhere(loc: string | undefined): SQL | undefined {
+type LocationCols = { remote: AnyPgColumn; countryCode: AnyPgColumn; location: AnyPgColumn };
+
+/** SQL filter for a region key or free-text place. Columns default to the jobs table (Outreach reuses it for contacts). */
+export function locationWhere(loc: string | undefined, cols: LocationCols = { remote: j.remote, countryCode: j.countryCode, location: j.location }): SQL | undefined {
   const value = loc?.trim();
   if (!value || value === "anywhere") return undefined;
   const region = regionByKey(value);
-  if (region?.remoteOnly) return eq(j.remote, true);
-  if (region?.countries) return inArray(j.countryCode, region.countries);
+  if (region?.remoteOnly) return eq(cols.remote, true);
+  if (region?.countries) return inArray(cols.countryCode, region.countries);
   // Free text: match the location text (with aliases like Bengaluru/Bangalore) or the detected country
   const terms = locationTerms(value);
   const country = detectCountry(value);
-  const conds = terms.map((t) => ilike(j.location, `%${t.replace(/[%_]/g, "")}%`));
-  if (country) conds.push(eq(j.countryCode, country));
+  const conds = terms.map((t) => ilike(cols.location, `%${t.replace(/[%_]/g, "")}%`));
+  if (country) conds.push(eq(cols.countryCode, country));
   return or(...conds);
 }
 

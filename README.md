@@ -19,6 +19,7 @@ packages/shared  Shared types and schemas
 | 5 | Chrome extension: autofill (incl. custom dropdowns), resume attach, learning, application capture | ✅ Done |
 | 6 | Gmail sync (rule-based classifier + matcher), needs-review inbox, Kanban, timeline, dashboard funnel | ✅ Done |
 | 7 | Worldwide jobs + location filter, one-click & bulk tailoring, apply queue (extension), follow-up emails (drafted, user sends) | ✅ Done |
+| 8 | Outreach: hiring contacts (job posts, Gmail, company websites, manual/CSV), personalised emails with the master resume, capped batch sending | ✅ Done |
 
 ## One-time setup
 
@@ -86,6 +87,11 @@ The extension runs only when clicked (`activeTab`), plus ATS domains for embedde
 - **One-click tailoring** (`lib/tailor/auto.ts`): Gemini (guarded, 35s timeout, LOW thinking) or rules; reuses an existing tailored resume unless re-tailored. Bulk selection on Jobs runs it per job (spaced for Gemini's free tier) and can queue each job.
 - **Apply queue** (`/queue`, `apply_queue` table, `/api/ext/queue`): the extension opens each queued job, autofills it, attaches that job's tailored resume and shows a bottom bar; submitting (or "Submitted → next") logs the application and opens the next job. Nothing is auto-submitted.
 - **Follow-ups** (`lib/followup/*`): due when the timer (latest of applied / last follow-up / company's last email) passes N days, while waiting (applied, assessment, no response), up to a max, never >30 days after the last activity. The daily Gmail cron drafts them (Gemini or template) and sends a push; the user reviews and sends from Gmail (`gmail.send` scope, threaded replies via `lib/gmail/send.ts`).
+
+## Outreach
+- **Contacts** (`lib/outreach/`, `outreach_contacts`): hiring addresses from job descriptions (after every jobs sync), recruiters in Gmail (daily), company websites, and paste/CSV import. `extract.ts` drops privacy/EEO/accessibility/no-reply/ATS/alert inboxes and marks team inboxes (careers@, hr@…) vs people. Location/remote come from the job, so the region chips work like on Jobs.
+- **Company websites** (`site.ts`, `company_sites`): up to 6 public pages per site (home, careers, jobs, contact, about + linked career pages), honouring robots.txt. Found Greenhouse/Lever/Ashby boards are added to tracked companies (openings sync daily), schema.org JobPostings are stored as jobs, published addresses become contacts. ~30 sites are checked per day by the Gmail cron; re-checked every 14 days.
+- **Emails** (`service.ts`, `outreach_emails`): Gemini (or a varied template) writes a short, factual email per contact; the user reviews drafts and clicks **Send all**. Sends go from Gmail with the master resume PDF attached (`buildMime` multipart), one every ~25 s from the open tab, max `users.outreach_daily_cap` (default 25) per 24 h, never the same address within 60 days, never to replied/bounced/do-not-contact. Replies and bounces are detected from the sent threads by the daily cron.
 
 ## Access control
 - Only emails listed in `ALLOWED_EMAILS` (env) or the `allowed_emails` table can sign in. Everyone else gets "This Google account isn't on the allowlist".

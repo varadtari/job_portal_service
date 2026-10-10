@@ -1,4 +1,4 @@
-export type JobSource = "greenhouse" | "lever" | "ashby" | "jsearch" | "adzuna" | "remotive" | "himalayas" | "jobicy" | "email" | "manual";
+export type JobSource = "greenhouse" | "lever" | "ashby" | "jsearch" | "adzuna" | "remotive" | "himalayas" | "jobicy" | "email" | "manual" | "website";
 
 export type NormalizedJob = {
   source: JobSource;

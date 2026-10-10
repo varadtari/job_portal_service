@@ -82,3 +82,18 @@ describe("stale applications", () => {
     expect(isDue(app({ appliedAt: d("2026-07-01"), lastEmailAt: d("2026-09-25") }), defaults, d("2026-10-06"))).toBe(true);
   });
 });
+
+describe("buildMime attachments", () => {
+  it("builds multipart/mixed with the PDF intact", () => {
+    const pdf = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x37, 0, 255, 10, 13]);
+    const m = Buffer.from(buildMime({ from: "a@b.c", to: "hr@acme.io", subject: "Backend role", body: "Hello", attachments: [{ filename: "Varad\r\nX: y Resume.pdf", contentType: "application/pdf", data: pdf }] }), "base64url").toString("utf8");
+    const boundary = m.match(/boundary="([^"]+)"/)![1];
+    const parts = m.split(`--${boundary}`).slice(1, -1);
+    expect(parts).toHaveLength(2);
+    expect(Buffer.from(parts[0].split("\r\n\r\n")[1].replace(/\r\n/g, ""), "base64").toString()).toBe("Hello");
+    expect(parts[1]).toContain('Content-Disposition: attachment; filename="Varad X: y Resume.pdf"');
+    expect(new Uint8Array(Buffer.from(parts[1].split("\r\n\r\n")[1].replace(/\r\n/g, ""), "base64"))).toEqual(pdf);
+    expect(m.trimEnd().endsWith(`--${boundary}--`)).toBe(true);
+    expect(m).not.toMatch(/\r\nX: y/);
+  });
+});

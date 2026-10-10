@@ -112,3 +112,28 @@ export async function writeFollowUpWithGemini(input: {
 }): Promise<{ subject: string; body: string }> {
   return callGemini(FollowUpEmail, FOLLOW_UP_SYSTEM, input, 0.6);
 }
+
+const OUTREACH_SYSTEM = `You write a short cold email from a job candidate to a company's hiring contact. The candidate's resume is attached to the email.
+
+Rules:
+- 80–130 words in the body. Plain text, no markdown, no bullet points.
+- Layout: greeting on its own line, then 2–3 short paragraphs separated by a blank line, then "Thank you for your time," (or similar) and the candidate's name on its own line. Use "\n" for line breaks.
+- If "role" is given, ask to be considered for that role; otherwise express interest in "targetRole" positions at the company.
+- Mention at most three skills, taken only from "skills", and the "headline" if given. Never invent experience, years, numbers, achievements or facts about the company.
+- Don't claim to know, follow, admire or have used the company or its products; you know nothing about it beyond its name.
+- Say the resume is attached. End with one clear, low-pressure ask (a short call, or forwarding to the hiring manager).
+- Greet the contact by first name if "contactName" is given, otherwise "Hello,". Sign off with the candidate's full name only.
+- Subject: short and specific (under 70 characters), e.g. "Backend Developer – interested in <company>". No clickbait, no emojis.`;
+
+export async function writeOutreachWithGemini(input: {
+  candidateName: string;
+  headline: string | null;
+  company: string;
+  role: string | null;
+  targetRole: string;
+  contactName: string | null;
+  skills: string[];
+  location: string | null;
+}): Promise<{ subject: string; body: string }> {
+  return callGemini(FollowUpEmail, OUTREACH_SYSTEM, input, 0.7);
+}

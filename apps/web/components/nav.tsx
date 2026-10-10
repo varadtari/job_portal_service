@@ -10,6 +10,7 @@ const ITEMS = [
   { href: "/jobs", label: "Jobs" },
   { href: "/queue", label: "Apply queue" },
   { href: "/applications", label: "Applications" },
+  { href: "/outreach", label: "Outreach" },
   { href: "/answers", label: "Quick answers" },
   { href: "/resumes", label: "Resumes" },
   { href: "/profile", label: "Profile" },

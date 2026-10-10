@@ -1,7 +1,7 @@
 // Picks who to follow up with from the application's emails: a real person, not a no-reply/ATS sender.
 
-const NO_REPLY = /no-?reply|do-?not-?reply|donotreply|notifications?@|mailer-daemon|bounce|alerts?@|jobs-noreply|talent-noreply/i;
-const PLATFORM = /greenhouse|lever\.co|ashbyhq|myworkday|workday|smartrecruiters|icims|hackerrank|codility|hackerearth|codesignal|coderbyte|naukri|linkedin|instahyre|indeed|hirist|wellfound|zohorecruit|freshteam|darwinbox|keka|recruitee|teamtailor|workable|bamboohr|jobvite|successfactors|taleo|greenhouse-mail/i;
+export const NO_REPLY = /no-?reply|do-?not-?reply|donotreply|notifications?@|mailer-daemon|bounce|alerts?@|jobs-noreply|talent-noreply/i;
+export const PLATFORM = /greenhouse|lever\.co|ashbyhq|myworkday|workday|smartrecruiters|icims|hackerrank|codility|hackerearth|codesignal|coderbyte|naukri|linkedin|instahyre|indeed|hirist|wellfound|zohorecruit|freshteam|darwinbox|keka|recruitee|teamtailor|workable|bamboohr|jobvite|successfactors|taleo|greenhouse-mail/i;
 
 export function parseAddress(from: string): { name: string | null; email: string } | null {
   const m = from.match(/^\s*"?([^"<]*?)"?\s*<([^>]+@[^>]+)>\s*$/) ?? from.match(/^\s*()([^\s<>]+@[^\s<>]+)\s*$/);

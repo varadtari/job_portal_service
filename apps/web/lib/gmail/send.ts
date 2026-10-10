@@ -1,4 +1,4 @@
-import { buildMime } from "./mime";
+import { buildMime, type Attachment } from "./mime";
 
 export class GmailSendPermissionError extends Error {
   constructor() {
@@ -22,7 +22,7 @@ export async function messageMeta(token: string, gmailId: string): Promise<Meta 
 /** Sends a plain-text email from the user's Gmail, threaded under `replyTo` when given. */
 export async function sendEmail(
   token: string,
-  m: { from: string; to: string; subject: string; body: string; replyTo?: Meta | null },
+  m: { from: string; to: string; subject: string; body: string; replyTo?: Meta | null; attachments?: Attachment[] },
 ): Promise<{ id: string; threadId: string }> {
   const raw = buildMime({
     from: m.from,
@@ -31,6 +31,7 @@ export async function sendEmail(
     body: m.body,
     inReplyTo: m.replyTo?.messageIdHeader,
     references: m.replyTo ? [m.replyTo.references, m.replyTo.messageIdHeader].filter(Boolean).join(" ") : null,
+    attachments: m.attachments,
   });
   const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
     method: "POST",

@@ -19,6 +19,7 @@ export const SOURCE_LABEL: Record<string, string> = {
   email: "Email alert",
   directory: "Company directory",
   manual: "Added by you",
+  website: "Company website",
 };
 
 export const STATUS_LABEL: Record<string, string> = {
