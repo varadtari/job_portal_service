@@ -7,7 +7,7 @@ import { Badge, Card } from "@/components/ui";
 import { db, schema } from "@/lib/db";
 import { COLUMNS, EVENT_LABEL, gmailLink } from "@/lib/applications/labels";
 import { getApplication } from "@/lib/applications/repo";
-import { DeleteApplication, Notes, StatusControl } from "./controls";
+import { DeleteApplication, DetachEvent, Notes, StatusControl } from "./controls";
 import { FollowUpPanel } from "./followup-panel";
 import { nextFollowUpAt } from "@/lib/followup/schedule";
 import { canSend } from "@/lib/followup/service";
@@ -67,6 +67,7 @@ export default async function ApplicationPage(props: PageProps<"/applications/[i
                         Open in Gmail ↗
                       </a>
                     )}
+                    {e.emailMessageId && e.type !== "manual" && <DetachEvent id={e.id} />}
                   </div>
                 </li>
               ))}

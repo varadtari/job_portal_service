@@ -8,10 +8,11 @@ import { resolveEvent } from "./actions";
 type Event = { id: string; type: string; subject: string | null; fromAddress: string | null; snippet: string | null; occurredAt: Date; emailMessageId: string | null };
 type App = { id: string; company: string; title: string };
 
-function Row({ e, apps, guess, account }: { e: Event; apps: App[]; guess: string; account: string | null }) {
+function Row({ e, apps, guess, suggested, account }: { e: Event; apps: App[]; guess: string; suggested: string; account: string | null }) {
   const [pending, start] = useTransition();
   const [mode, setMode] = useState<"attach" | "create">(apps.length ? "attach" : "create");
-  const [attachTo, setAttachTo] = useState(apps[0]?.id ?? "");
+  // Never default to an arbitrary application: only a company match is preselected
+  const [attachTo, setAttachTo] = useState(suggested);
   const [company, setCompany] = useState(guess);
   const [title, setTitle] = useState("");
   return (
@@ -36,6 +37,7 @@ function Row({ e, apps, guess, account }: { e: Event; apps: App[]; guess: string
         </Select>
         {mode === "attach" ? (
           <Select className="w-auto max-w-xs" value={attachTo} onChange={(x) => setAttachTo(x.target.value)} aria-label="Application">
+            <option value="" disabled>Choose application…</option>
             {apps.map((a) => <option key={a.id} value={a.id}>{a.company} – {a.title}</option>)}
           </Select>
         ) : (
@@ -57,13 +59,13 @@ function Row({ e, apps, guess, account }: { e: Event; apps: App[]; guess: string
   );
 }
 
-export function ReviewQueue({ events, apps, guesses, account }: { events: Event[]; apps: App[]; guesses: Record<string, string>; account: string | null }) {
+export function ReviewQueue({ events, apps, guesses, suggestions, account }: { events: Event[]; apps: App[]; guesses: Record<string, string>; suggestions: Record<string, string>; account: string | null }) {
   if (!events.length) return null;
   return (
     <Card className="mb-6 border-warning/40">
       <h2 className="font-semibold">Needs review <span className="ml-1 rounded-full bg-warning/15 px-2 py-0.5 text-xs text-warning">{events.length}</span></h2>
       <p className="text-sm text-fg-muted">Job emails JobPilot couldn&apos;t confidently link to an application.</p>
-      <ul className="divide-y divide-border">{events.map((e) => <Row key={e.id} e={e} apps={apps} guess={guesses[e.id] ?? ""} account={account} />)}</ul>
+      <ul className="divide-y divide-border">{events.map((e) => <Row key={e.id} e={e} apps={apps} guess={guesses[e.id] ?? ""} suggested={suggestions[e.id] ?? ""} account={account} />)}</ul>
     </Card>
   );
 }

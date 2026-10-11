@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Button, Label, Select, Textarea } from "@/components/ui";
 import { COLUMNS } from "@/lib/applications/labels";
-import { deleteApplication, saveNotes, setStatus } from "../actions";
+import { deleteApplication, detachEvent, saveNotes, setStatus } from "../actions";
 
 export function StatusControl({ id, status }: { id: string; status: string }) {
   const [pending, start] = useTransition();
@@ -36,5 +36,20 @@ export function DeleteApplication({ id }: { id: string }) {
     <Button variant="danger" disabled={pending} onClick={() => confirm("Delete this application and its email history?") && start(() => deleteApplication(id))}>
       Delete application
     </Button>
+  );
+}
+
+/** Moves a wrongly matched email back to Needs review. */
+export function DetachEvent({ id }: { id: string }) {
+  const [pending, start] = useTransition();
+  return (
+    <button
+      type="button"
+      disabled={pending}
+      onClick={() => { if (confirm("Move this email back to Needs review? The status will be recalculated without it.")) start(() => detachEvent(id)); }}
+      className="font-medium text-fg-muted hover:text-danger disabled:opacity-50"
+    >
+      {pending ? "Moving…" : "Wrong application?"}
+    </button>
   );
 }

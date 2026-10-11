@@ -9,6 +9,7 @@ import { STATUSES, type AppStatus } from "@/lib/applications/repo";
 import { GmailReconnectError } from "@/lib/gmail/client";
 import { nextStatus, type EmailType, type Status } from "@/lib/gmail/classify";
 import { syncGmail } from "@/lib/gmail/sync";
+import { recomputeStatus } from "@/lib/applications/status";
 
 const a = schema.applications;
 const ev = schema.applicationEvents;
@@ -108,4 +109,15 @@ export async function resolveEvent(eventId: string, action: { attachTo?: string;
     .set({ status, lastEmailAt: !app.lastEmailAt || app.lastEmailAt < event.occurredAt ? event.occurredAt : app.lastEmailAt })
     .where(eq(a.id, app.id));
   revalidate();
+}
+
+/** "Wrong application": sends an email back to Needs review and recalculates the application's status without it. */
+export async function detachEvent(eventId: string) {
+  const userId = await requireUserId();
+  const [event] = await db().select().from(ev).where(and(eq(ev.id, eventId), eq(ev.userId, userId)));
+  if (!event?.applicationId || event.type === "manual") return;
+  await db().update(ev).set({ applicationId: null, needsReview: true }).where(eq(ev.id, eventId));
+  await recomputeStatus(event.applicationId);
+  revalidate();
+  revalidatePath(`/applications/${event.applicationId}`);
 }

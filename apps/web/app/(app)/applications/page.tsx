@@ -6,7 +6,7 @@ import { COLUMNS } from "@/lib/applications/labels";
 import { listApplications, reviewQueue } from "@/lib/applications/repo";
 import { nowMs, timeAgo } from "@/lib/format";
 import { nextFollowUpAt } from "@/lib/followup/schedule";
-import { guessCompany } from "@/lib/gmail/match";
+import { guessCompany, matchApplication, normCompany } from "@/lib/gmail/match";
 import { AddApplication } from "./add-application";
 import { GmailSyncButton } from "./gmail-sync";
 import { ReviewQueue } from "./review";
@@ -19,6 +19,14 @@ export default async function ApplicationsPage() {
   const defaults = { followUpDefaultOn: user?.followUpDefaultOn ?? true, followUpDefaultDays: user?.followUpDefaultDays ?? 7, followUpDefaultMax: user?.followUpDefaultMax ?? 2 };
   const now = nowMs();
   const guesses = Object.fromEntries(review.map((e) => [e.id, guessCompany({ from: e.fromAddress ?? "", subject: e.subject ?? "", text: e.snippet ?? "" }) ?? ""]));
+  // Preselect an application only when the email clearly points at it (same company)
+  const suggestions = Object.fromEntries(
+    review.map((e) => {
+      const { app } = matchApplication({ from: e.fromAddress ?? "", subject: e.subject ?? "", text: e.snippet ?? "" }, apps);
+      const byName = guesses[e.id] ? apps.filter((a) => normCompany(a.company) === normCompany(guesses[e.id])) : [];
+      return [e.id, app?.id ?? (byName.length === 1 ? byName[0].id : "")];
+    }),
+  );
 
   return (
     <>
@@ -31,7 +39,7 @@ export default async function ApplicationsPage() {
         }
         actions={<div className="flex flex-wrap items-center gap-2"><AddApplication /><GmailSyncButton /></div>}
       />
-      <ReviewQueue events={review} apps={apps.map(({ id, company, title }) => ({ id, company, title }))} guesses={guesses} account={user?.email ?? null} />
+      <ReviewQueue events={review} apps={apps.map(({ id, company, title }) => ({ id, company, title }))} guesses={guesses} suggestions={suggestions} account={user?.email ?? null} />
       {apps.length === 0 ? (
         <EmptyState title="No applications yet" body="Click Sync Gmail to import them from your inbox, mark jobs as applied, or add one manually." />
       ) : (
